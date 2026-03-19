@@ -92,341 +92,304 @@
         </div>
     </div>
 
-    <script>
-        // --- 1. THE 10 STANDARDIZED LOCATIONS ---
-        const basicZones = {
-            Indoor: ["Build", "Photo", "Cosmetics/Paint", "Server Room", "Electrical Room"],
-            Logistics: ["Detail", "QC", "Inspection", "Ready Line", "Truckpad"],
-            Gates: ["Guard Shack", "Entry Gate", "Exit Gate"],
-            HaulerPath: ["Truckpad", "Entry Gate", "Exit Gate"],
-            OutdoorGrids: ["Ready Line", "Inspection", "Lot Grid A", "Lot Grid B"],
-            CrowdZone: ["Build", "Guard Shack", "Entry Gate"]
-        };
+<script>
+    const basicZones = {
+        Indoor: ["Build", "Photo", "Cosmetics/Paint", "Server Room", "Electrical Room"],
+        Logistics: ["Detail", "QC", "Inspection", "Ready Line", "Truckpad"],
+        Gates: ["Guard Shack", "Entry Gate", "Exit Gate"],
+        HaulerPath: ["Truckpad", "Entry Gate", "Exit Gate"],
+        OutdoorGrids: ["Ready Line", "Inspection", "Lot Grid A", "Lot Grid B"],
+        CrowdZone: ["Build", "Guard Shack", "Entry Gate"]
+    };
 
-        const siteData = {
-            "Concord": { mapURL: "map_screenshot.png" },
-            "HainesCity": { mapURL: "haines.city.png.png" },
-            "Fairburn": { mapURL: "fairburn.png" },
-            "Chesterfield": { mapURL: "chesterfield.png" },
-            "Bessemer": { mapURL: "bessemer.png" },
-            "WinderHogan": { mapURL: "winder_hoganrd.png" },
-            "WinderPierce": { mapURL: "winder_pierce.png" },
-            "WestMemphis": { mapURL: "westmemphis.png.png" },
-            "Orlando": { mapURL: "orlando.png" },
-            "KansasCity": { mapURL: "kansascity.png" }
-        };
+    const siteData = {
+        "Concord": { mapURL: "map_screenshot.png" },
+        "HainesCity": { mapURL: "haines.city.png.png" },
+        "Fairburn": { mapURL: "fairburn.png" },
+        "Chesterfield": { mapURL: "chesterfield.png" },
+        "Bessemer": { mapURL: "bessemer.png" },
+        "WinderHogan": { mapURL: "winder_hoganrd.png" },
+        "WinderPierce": { mapURL: "winder_pierce.png" },
+        "WestMemphis": { mapURL: "westmemphis.png.png" },
+        "Orlando": { mapURL: "orlando.png" },
+        "KansasCity": { mapURL: "kansascity.png" }
+    };
 
-        const allLocations = [].concat(basicZones.Indoor, basicZones.Logistics, basicZones.Gates, basicZones.OutdoorGrids);
+    const allLocations = [].concat(basicZones.Indoor, basicZones.Logistics, basicZones.Gates, basicZones.OutdoorGrids);
 
-        function changeSite() {
-            const site = document.getElementById('site-selector').value;
-            document.getElementById('map-image').src = siteData[site].mapURL;
-            document.getElementById('scenario-output').style.display = 'none';
-        }
+    function changeSite() {
+        const site = document.getElementById('site-selector').value;
+        document.getElementById('map-image').src = siteData[site].mapURL;
+        document.getElementById('scenario-output').style.display = 'none';
+    }
 
-        // --- 2. THE FULL 200 INCIDENTS ARRAY ---
-       const incidents = [
-            { text: "A sudden microburst flips a staging tent, trapping a vendor underneath.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Facility", canBeUnknown: true },
-            { text: "An associate reports an Airtag hidden under a high-value customer vehicle.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "Corrosive substance spray in an associate's eyes; the eyewash station has no pressure.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: true },
-            { text: "Flash-mob on bikes bypasses security and rides recklessly through hauler lanes.", allowedZones: ["Gates", "HaulerPath"], type: "Security", canBeUnknown: false },
-            { text: "A forklift operator slumps over controls; the vehicle is pinned accelerating against a pillar.", allowedZones: ["Indoor", "Logistics"], type: "Medical", canBeUnknown: true },
-            { text: "Severe plumbing failure causes raw sewage to back up into the hallways.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: false },
-            { text: "An aggressive individual blocks the exit gate with their car and throws keys into the grass.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "A 3rd party hauler is leaking bubbling green fluid that is reacting on the asphalt.", allowedZones: ["Gates", "Logistics", "HaulerPath"], type: "Hazmat", canBeUnknown: true },
-            { text: "An anonymous bomb threat is received specifying an outbound vehicle.", allowedZones: ["Gates", "Logistics"], type: "Security", canBeUnknown: false },
-            { text: "Two associates are stung by ground hornets; one is having an allergic reaction.", allowedZones: ["OutdoorGrids"], type: "Medical", canBeUnknown: true },
-            { text: "An OSHA inspector arrives unannounced during a spill and demands access to the hot zone.", allowedZones: ["Gates", "Indoor"], type: "Facility", canBeUnknown: false },
-            { text: "The Fire Dept arrives but the logging app is down; the guard refuses entry causing a confrontation.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
-            { text: "Plainclothes detectives arrive with a warrant and bypass the Guard Shack.", allowedZones: ["Gates", "Indoor"], type: "Security", canBeUnknown: false },
-            { text: "An ambulance arrives at the gate for a 'mass casualty' that nobody called in.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "An EPA regulator arrives for a surprise audit just as a massive oil spill occurs.", allowedZones: ["Gates", "Logistics"], type: "Hazmat", canBeUnknown: false },
-            { text: "A building inspector starts taking pictures and threatening to shut down operations.", allowedZones: ["Gates", "Logistics"], type: "Security", canBeUnknown: false },
-            { text: "The previous shift left with master keys missing and a firearm left on the desk.", allowedZones: ["Indoor", "Gates"], type: "Security", canBeUnknown: false },
-            { text: "A high-voltage EV flagged for thermal runaway 6 hours ago was never moved to isolation.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "The perimeter gate is found broken and left open overnight with no guard posted.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "The previous supervisor left mid-shift with no pass-down and the site power is failing.", allowedZones: ["Indoor", "Gates"], type: "Facility", canBeUnknown: false },
-            { text: "The Remote Ops Center loses connectivity while a hauler is stuck halfway through the gate.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
-            { text: "A 3rd Party Transport driver unloads a damaged unit and refuses to sign paperwork.", allowedZones: ["Logistics", "HaulerPath"], type: "Security", canBeUnknown: false },
-            { text: "A 3rd Party hauler tears the bumper off a staged unit then denies it happened.", allowedZones: ["Logistics", "HaulerPath", "Gates"], type: "Security", canBeUnknown: false },
-            { text: "A Market Ops hauler returns a unit with undocumented biohazardous material inside.", allowedZones: ["Logistics", "Indoor"], type: "Hazmat", canBeUnknown: true },
-            { text: "A Market Ops driver accidentally locks their keys inside a running hauler blocking the Inbound lane.", allowedZones: ["Logistics", "Gates"], type: "Facility", canBeUnknown: false },
-            { text: "A vendor performing camera maintenance falls from a ladder and is unresponsive.", allowedZones: ["OutdoorGrids", "Logistics", "Gates"], type: "Medical", canBeUnknown: true },
-            { text: "The critical camera server goes down just as a suspicious vehicle is seen circling the fence.", allowedZones: ["Gates", "OutdoorGrids"], type: "Security", canBeUnknown: false },
-            { text: "A forcibly removed trespasser returns to the property line and begins throwing rocks.", allowedZones: ["OutdoorGrids", "Gates"], type: "Security", canBeUnknown: false },
-            { text: "The main entry gate fails halfway open; the manual override clutch is stripped.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
-            { text: "A contractor severs a main fiber optic line, taking down all Wi-Fi and security cameras.", allowedZones: ["Indoor", "Logistics", "OutdoorGrids"], type: "Facility", canBeUnknown: true },
-            { text: "A perimeter audit reveals a freshly dug gap underneath the chain-link fence.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: false },
-            { text: "The security rover vehicle begins smoking and rapidly catches fire.", allowedZones: ["OutdoorGrids"], type: "Hazmat", canBeUnknown: true },
-            { text: "An associate discovers a loaded handgun under a seat while detailing a trade-in.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "A vendor tries to aggressively tailgate an associate's car into the facility.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "A 3rd party hauler drops a vehicle off the ramps, crushing the hydraulic controls.", allowedZones: ["Logistics", "Gates"], type: "Medical", canBeUnknown: true },
-            { text: "A vehicle crashes directly into the Guard Shack structure, injuring the guard.", allowedZones: ["Gates"], type: "Medical", canBeUnknown: false },
-            { text: "A bulk fuel truck experiences a pump failure, spraying diesel onto an associate.", allowedZones: ["Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "A drive-cycle vehicle engine suddenly erupts in flames; the associate is trapped.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "The Fast Pass automated scanner drops the barrier arm onto a truck windshield.", allowedZones: ["Gates"], type: "Medical", canBeUnknown: false },
-            { text: "A hauler leaving after-hours ruptures its fuel tank on an exit bollard.", allowedZones: ["Gates"], type: "Hazmat", canBeUnknown: false },
-            { text: "An associate finds a used syringe tucked between the seats of a trade-in.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "The lot magnet sweeper ejects metal debris, shattering a building window.", allowedZones: ["OutdoorGrids", "HaulerPath"], type: "Facility", canBeUnknown: true },
-            { text: "An associate exhibits signs of heat stroke and has collapsed.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Medical", canBeUnknown: true },
-            { text: "A drone is seen hovering low over the secure inventory grids.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "An associate collapses clutching their chest; they are unresponsive and not breathing.", allowedZones: ["Indoor", "OutdoorGrids", "Logistics"], type: "Medical", canBeUnknown: true },
-            { text: "An associate focusing on a handheld scanner walks directly into the path of a moving vehicle.", allowedZones: ["Indoor", "Logistics"], type: "Medical", canBeUnknown: true },
-            { text: "An internal network crash causes a massive hauler backlog at the Entry Gate.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
-            { text: "An auditor discovers a vehicle with smashed windows and a pool of blood inside.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: true },
-            { text: "An associate on their 12th hour of OT falls asleep at the wheel and crashes into the fence.", allowedZones: ["OutdoorGrids", "HaulerPath"], type: "Medical", canBeUnknown: true },
-            { text: "A morning scan reveals 20 feet of perimeter fence was removed overnight.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: false },
-            { text: "An associate finds a suspicious taped-up duffel bag tucked under a hauler.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Security", canBeUnknown: true },
-            { text: "Two marked cruisers arrive with lights flashing, demanding access to search for a suspect.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "An associate finds drug paraphernalia tucked in the headliner of a trade-in.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "A windshield repair vendor suffers a severe laceration to their arm while working.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Medical", canBeUnknown: true },
-            { text: "A stowaway is found sleeping in the cab of a staged customer vehicle.", allowedZones: ["Logistics", "HaulerPath"], type: "Security", canBeUnknown: true },
-            { text: "Police call advising a vehicle delivered today was involved in a violent crime.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Security", canBeUnknown: true },
-            { text: "A hydraulic line blows in the bay; the nearest spill kit is empty.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: true },
-            { text: "A separated employee's spouse arrives at the Guard Shack demanding to see the site leader.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "Media arrives at the gate asking for comment on an emergency dispatch.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "High winds knock over a light pole, which is now draped across a hauler.", allowedZones: ["OutdoorGrids", "HaulerPath"], type: "Facility", canBeUnknown: true },
-            { text: "An associate reports being followed by a suspicious vehicle during a lot walk.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "A local activist group is filming through the fence and shouting at associates.", allowedZones: ["Gates", "OutdoorGrids"], type: "Security", canBeUnknown: false },
-            { text: "A large drone crashes into high-value units, sparking a fire.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "A 3rd party vendor is caught stealing personal items from an associate's locker.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: true },
-            { text: "A hauler attempts to bribe the guard to skip the drop-off queue.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "An associate finds a backpack with burglary tools hidden near a secure door.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "An EV being jump-started begins emitting a high-pitched whine and sparks.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "A fuel truck slow leak on the Truckpad goes unnoticed for an hour.", allowedZones: ["Logistics", "HaulerPath"], type: "Hazmat", canBeUnknown: false },
-            { text: "An associate accidentally drinks a chemical stored in a soda bottle.", allowedZones: ["Indoor", "Logistics"], type: "Medical", canBeUnknown: true },
-            { text: "A hauler takes out a main fire hydrant, creating a massive geyser.", allowedZones: ["Logistics", "Gates"], type: "Facility", canBeUnknown: false },
-            { text: "A lightning strike fries the site's main server and all cameras.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: false },
-            { text: "Trespassers are caught attempting to jump a battery in deep storage.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: false },
-            { text: "An associate collapses after reporting a sweet smell coming from vehicle vents.", allowedZones: ["Logistics", "Indoor"], type: "Hazmat", canBeUnknown: true },
-            { text: "A 3rd party rig collapses; the driver is pinned under the trailer gear.", allowedZones: ["Logistics", "HaulerPath"], type: "Medical", canBeUnknown: true },
-            { text: "An associate finds a skimmer device on the vendor badging kiosk.", allowedZones: ["Indoor", "Gates"], type: "Security", canBeUnknown: false },
-            { text: "A news helicopter is hovering low following a nearby police chase.", allowedZones: ["Gates", "OutdoorGrids"], type: "Security", canBeUnknown: false },
-            { text: "An associate reports their personal vehicle was keyed in the employee lot.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "Birds nested in a roof area have caused an associate to have a respiratory reaction.", allowedZones: ["Indoor"], type: "Medical", canBeUnknown: true },
-            { text: "An associate found sleeping in a secure area becomes combative when woken.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A power surge locks all electronic doors, trapping staff inside.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: false },
-            { text: "A hauler unloads a vehicle onto another unit, causing a crush hazard.", allowedZones: ["Logistics", "HaulerPath"], type: "Facility", canBeUnknown: true },
-            { text: "An associate reports a person with a rifle in the adjacent woods.", allowedZones: ["OutdoorGrids", "Gates"], type: "Security", canBeUnknown: false },
-            { text: "A main water line ruptures, flooding the Electrical Room.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: false },
-            { text: "A vendor delivery truck has a stowaway hiding in the cargo box.", allowedZones: ["Logistics", "Gates"], type: "Security", canBeUnknown: false },
-            { text: "An associate reports their locker was broken into and a firearm is missing.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: true },
-            { text: "An audit driver crashes through a parked unit; both catch fire.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "The automated gate system starts cycling repeatedly without a trigger.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
-            { text: "A generator is found stripped of copper wiring during inspection.", allowedZones: ["OutdoorGrids", "Indoor"], type: "Security", canBeUnknown: false },
-            { text: "An associate is struck by a falling overhead door with failed sensors.", allowedZones: ["Indoor", "Logistics"], type: "Medical", canBeUnknown: true },
-            { text: "A tow truck tries to leave with the wrong unit and won't stop.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "A swarm of bees is discovered inside a newly arrived unit.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Medical", canBeUnknown: true },
-            { text: "An associate operating a forklift while intoxicated refuses to stop.", allowedZones: ["Logistics", "Indoor"], type: "Security", canBeUnknown: true },
-            { text: "A suspicious white powder is found in an envelope at the Guard Shack.", allowedZones: ["Gates"], type: "Hazmat", canBeUnknown: false },
-            { text: "A hauler driver collapses while pulling into the Entry Gate.", allowedZones: ["Gates"], type: "Medical", canBeUnknown: false },
-            { text: "An associate's hand is caught in a high-pressure tire machine.", allowedZones: ["Indoor", "Logistics"], type: "Medical", canBeUnknown: true },
-            { text: "A sprinkler head is knocked off, flooding the Server Room.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: false },
-            { text: "An irate neighbor is throwing debris over the fence at vehicles.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: false },
-            { text: "A sinkhole is discovered opening directly under the Truckpad.", allowedZones: ["Logistics", "HaulerPath"], type: "Facility", canBeUnknown: false },
-            { text: "A hauler is leaking hydraulic fluid the entire length of the main driveway.", allowedZones: ["Gates", "HaulerPath"], type: "Hazmat", canBeUnknown: false },
-            { text: "An associate is missing after their shift; their personal car is still in the lot.", allowedZones: ["Gates", "Indoor"], type: "Security", canBeUnknown: true },
-            { text: "A hauler driver refuses to unstrap their load until they are provided a free meal.", allowedZones: ["Gates", "Logistics"], type: "Security", canBeUnknown: false },
-            { text: "The radio system fails during heavy fog, preventing communication with Inbound.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
-            { text: "A vehicle in the Ready Line starts rolling toward the main building.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Facility", canBeUnknown: true },
-            { text: "An associate reports a gas smell in a breakroom area.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: false },
-            { text: "A 3rd party inspector is found in a restricted area without a badge.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "An associate is caught 'donuting' a performance vehicle in the deep lot.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: true },
-            { text: "The main internet line is cut by a nearby construction crew.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: false },
-            { text: "A hauler driver gets their truck stuck under a low awning.", allowedZones: ["Logistics", "Gates"], type: "Facility", canBeUnknown: false },
-            { text: "An associate is bitten by a stray dog that entered through the fence.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Medical", canBeUnknown: true },
-            { text: "A vehicle on a lift is unstable and looks like it will tip over.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: true },
-            { text: "A vendor is caught taking pictures of a security key-lockbox.", allowedZones: ["Gates", "Indoor"], type: "Security", canBeUnknown: false },
-            { text: "An associate has a panic attack after being trapped in a secure room.", allowedZones: ["Indoor"], type: "Medical", canBeUnknown: false },
-            { text: "A brush fire outside the fence is blowing smoke toward the lot.", allowedZones: ["OutdoorGrids", "Gates"], type: "Hazmat", canBeUnknown: false },
-            { text: "An associate reports a co-worker has made a threat against leadership.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "A hauler unloads a vehicle that is actively smoking from the dash.", allowedZones: ["Logistics", "HaulerPath"], type: "Hazmat", canBeUnknown: true },
-            { text: "The main driveway is blocked by a unit that ran out of fuel.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
-            { text: "An associate is caught attempting to disable a camera system.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "A carrier arrives with an aggressive animal claiming it is a service animal.", allowedZones: ["Gates", "Logistics"], type: "Security", canBeUnknown: false },
-            { text: "The septic tank is overflowing near the Entry Gate.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
-            { text: "An associate reports a hidden stash of alcohol in a shop area.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: true },
-            { text: "A high-pressure air line explodes in a work area.", allowedZones: ["Indoor"], type: "Medical", canBeUnknown: true },
-            { text: "A hauler tries to leave with a unit not cleared for release.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "A suspicious person is climbing the fence into a secure zone.", allowedZones: ["Logistics"], type: "Security", canBeUnknown: false },
-            { text: "A severe ice event causes a staging tent roof to collapse.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Facility", canBeUnknown: true },
-            { text: "An associate discovers a large pool of oil in the Server Room.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: false },
-            { text: "A vendor is found using a master key they were never issued.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "An associate suffers a severe chemical burn from a leaking bottle.", allowedZones: ["Indoor", "Logistics"], type: "Medical", canBeUnknown: true },
-            { text: "A hauler driver refuses to move until a supervisor apologizes.", allowedZones: ["Gates", "Logistics"], type: "Security", canBeUnknown: false },
-            { text: "A vehicle battery explodes during charging, spraying acid.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "A backup generator is emitting thick black smoke and sparks.", allowedZones: ["OutdoorGrids", "Indoor"], type: "Facility", canBeUnknown: false },
-            { text: "An associate finds a venomous snake under a vehicle in the Ready Line.", allowedZones: ["OutdoorGrids"], type: "Medical", canBeUnknown: true },
-            { text: "A 3rd party driver starts a physical fight in the Truckpad.", allowedZones: ["Logistics"], type: "Security", canBeUnknown: false },
-            { text: "An associate reports being 'stalked' by a drone while in the lot.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "The exit gate won't open; a line of 10 haulers is stuck inside.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
-            { text: "An associate brought a child to work and left them unattended in a car.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "A vehicle fire breaks out in a photo area during a shoot.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: false },
-            { text: "An associate falls from a mezzanine level in a work area.", allowedZones: ["Indoor"], type: "Medical", canBeUnknown: true },
-            { text: "A hauler driver attempts to use a staff restroom and becomes hostile.", allowedZones: ["Indoor", "Gates"], type: "Security", canBeUnknown: false },
-            { text: "The fire alarm system is malfunctioning and won't stop sounding.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: false },
-            { text: "Airbags deploy unexpectedly during detailing, injuring the staff member.", allowedZones: ["Indoor"], type: "Medical", canBeUnknown: true },
-            { text: "A vendor is caught dumping trash behind a building.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A transformer explodes, sending burning debris onto the lot.", allowedZones: ["OutdoorGrids", "Gates"], type: "Hazmat", canBeUnknown: false },
-            { text: "An associate reports a personal data leak from a site computer.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A vehicle in the Truckpad is found with its doors welded shut.", allowedZones: ["Logistics"], type: "Security", canBeUnknown: true },
-            { text: "An associate is caught trying to bypass a badge-out protocol.", allowedZones: ["Gates", "Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A hauler driver is carrying an unauthorized passenger in the cab.", allowedZones: ["Gates", "Logistics"], type: "Security", canBeUnknown: false },
-            { text: "An oil spill is moving toward a protected wetland near the site.", allowedZones: ["OutdoorGrids", "HaulerPath"], type: "Hazmat", canBeUnknown: true },
-            { text: "An associate is using a site vehicle for personal errands off-site.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "The site main gas shutoff valve was found tampered with.", allowedZones: ["OutdoorGrids", "Gates"], type: "Security", canBeUnknown: false },
-            { text: "An associate reports finding a hidden camera in a breakroom.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A small plane makes an emergency landing in the deep storage lot.", allowedZones: ["OutdoorGrids"], type: "Facility", canBeUnknown: false },
-            { text: "An associate finds a 'nest' of repossessed items hidden in a shop area.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: true },
-            { text: "A hauler driver has an active warrant; police are at the gate.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "A vehicle fire spreads to 5 other units in the Ready Line.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "An associate is struck by a driver participating in a social media challenge.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Medical", canBeUnknown: true },
-            { text: "The main network hub was vandalized from the outside.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A hauler driver is unconscious due to carbon monoxide in the cab.", allowedZones: ["Logistics", "Gates"], type: "Medical", canBeUnknown: false },
-            { text: "A vehicle is found with the entire interior filled with concrete.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Facility", canBeUnknown: true },
-            { text: "An associate reports a listening device in a leader's office.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A hauler driver drops a load of junk units not on the manifest.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "An associate is caught stealing an engine during shift change.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "A vehicle in the lot was used for a 'takeover' and is severely damaged.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: true },
-            { text: "An associate reports a suspicious figure in a work area at night.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A hauler driver is found to be using a fake driver's license.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "An associate is caught swapping parts from a customer unit.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "A vehicle fire was caused by a magnifying effect from glass on the dash.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Hazmat", canBeUnknown: true },
-            { text: "An associate is found to have been living in a repossessed unit.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: true },
-            { text: "A hauler attempts to leave with an associate hiding in the trailer.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "An associate is caught selling site gear on a marketplace app.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "A vehicle fuel tank was filled with an unknown reactive chemical.", allowedZones: ["Logistics", "Indoor"], type: "Hazmat", canBeUnknown: true },
-            { text: "An associate is running a side business using site tools.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "A hauler driver has an aggressive pet in the cab attacking staff.", allowedZones: ["Gates", "Logistics"], type: "Security", canBeUnknown: false },
-            { text: "An associate reports a suspicious item targeting a site leader.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: true },
-            { text: "A vehicle in the Ready Line is found to be booby-trapped with pepper spray.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "An associate is caught using a site vehicle for a drag race.", allowedZones: ["OutdoorGrids", "HaulerPath"], type: "Security", canBeUnknown: true },
-            { text: "A hauler driver is found using a site-only fuel card.", allowedZones: ["Logistics", "Gates"], type: "Security", canBeUnknown: false },
-            { text: "An associate is smuggling electronics out of a repossessed unit.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "A vehicle is found with a suspicious ticking package in the trunk.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Security", canBeUnknown: true },
-            { text: "An associate is found to have been squatting in an Electrical Room.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A hauler driver is found using a fake site badge.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "An associate is caught renting out a customer unit for the weekend.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security", canBeUnknown: true },
-            { text: "A vehicle in the deep lot has a literal beehive inside.", allowedZones: ["OutdoorGrids"], type: "Medical", canBeUnknown: true },
-            { text: "An associate reports a spy camera in a site bathroom.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A hauler driver is carrying a large cash sum and no manifest.", allowedZones: ["Gates", "Logistics"], type: "Security", canBeUnknown: false },
-            { text: "An associate is mining crypto using site servers.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A vehicle exterior is covered in a sticky unknown resin.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Facility", canBeUnknown: true },
-            { text: "An associate is tampering with site drug testing samples.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A hauler driver drops off a vehicle that is literally cut in half.", allowedZones: ["Gates", "Logistics"], type: "Facility", canBeUnknown: false },
-            { text: "An associate is caught hiding a damaged unit in the deep lot.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: true },
-            { text: "A vehicle interior was removed and replaced with hay.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Facility", canBeUnknown: true },
-            { text: "An associate reports a suspicious light over the lot at night.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: false },
-            { text: "A hauler driver is carrying a weapon when approaching the guard.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "An associate is charging people for employee lot parking.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
-            { text: "Vehicle doors have been replaced with wooden planks.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Facility", canBeUnknown: true },
-            { text: "An associate finds a secret room hidden behind shelving.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A hauler drops a load of illegal items mixed with cars.", allowedZones: ["Gates", "Logistics"], type: "Security", canBeUnknown: false },
-            { text: "An associate is caught trying to hack HR records.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
-            { text: "A vehicle is found with a massive amount of trash inside.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Facility", canBeUnknown: true },
-            { text: "An associate finds a hidden stash of parts in the nearby woods.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: false },
-            { text: "A hauler driver is operating under a dead person's ID.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false }
-        ];
-        
-        // Loop to fill array to 200 for engine randomization
-        while (incidents.length < 200) {
-            incidents.push(incidents[Math.floor(Math.random() * incidents.length)]);
-        }
+    const incidents = [
+        { text: "A lightning strike fries the site's main server and all cameras.", type: "Facility", isSiteWide: true },
+        { text: "A site-wide power failure disables all camera systems and electronic access doors.", type: "Facility", isSiteWide: true },
+        { text: "The internal network crashes globally, causing a massive hauler backlog at the gates.", type: "Facility", isSiteWide: true },
+        { text: "Local police order an immediate site-wide lockdown due to an armed suspect in the area.", type: "Security", isSiteWide: true },
+        { text: "Severe weather sirens are sounding; a tornado warning is in effect.", type: "Facility", isSiteWide: true },
+        { text: "An anonymous bomb threat is received against the entire facility.", type: "Security", isSiteWide: true },
+        { text: "The main water line for the facility ruptures, requiring a total water shutoff.", type: "Facility", isSiteWide: true },
+        { text: "A cyber-security breach has locked all site computers with ransomware.", type: "Security", isSiteWide: true },
+        { text: "An earthquake has caused structural cracks; evacuation is ordered.", type: "Facility", isSiteWide: true },
+        { text: "The Fire Marshall has ordered an immediate site closure for safety violations.", type: "Facility", isSiteWide: true },
+        { text: "A sudden microburst flips a staging tent, trapping a vendor underneath.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Facility" },
+        { text: "An associate reports an Airtag hidden under a high-value customer vehicle.", allowedZones: ["Indoor", "Logistics"], type: "Security" },
+        { text: "Corrosive substance spray in an associate's eyes; the eyewash station has no pressure.", allowedZones: ["Indoor"], type: "Hazmat" },
+        { text: "Flash-mob on bikes bypasses security and rides through hauler lanes.", allowedZones: ["Gates", "HaulerPath"], type: "Security" },
+        { text: "A forklift operator slumps over controls; the vehicle is pinned accelerating.", allowedZones: ["Indoor", "Logistics"], type: "Medical" },
+        { text: "Severe plumbing failure causes raw sewage to back up into the hallways.", allowedZones: ["Indoor"], type: "Facility" },
+        { text: "An aggressive individual blocks the exit gate and throws keys into the grass.", allowedZones: ["Gates"], type: "Security" },
+        { text: "A 3rd party hauler is leaking bubbling green fluid reacting on the asphalt.", allowedZones: ["Gates", "Logistics", "HaulerPath"], type: "Hazmat" },
+        { text: "An anonymous bomb threat is received specifying an outbound vehicle.", allowedZones: ["Gates", "Logistics"], type: "Security" },
+        { text: "Two associates are stung by ground hornets; one is having an allergic reaction.", allowedZones: ["OutdoorGrids"], type: "Medical" },
+        { text: "An OSHA inspector arrives unannounced and demands access to the hot zone.", allowedZones: ["Gates", "Indoor"], type: "Facility" },
+        { text: "Fire Dept arrives but the logging app is down; guard refuses entry.", allowedZones: ["Gates"], type: "Facility" },
+        { text: "Plainclothes detectives arrive with a warrant and bypass the Guard Shack.", allowedZones: ["Gates", "Indoor"], type: "Security" },
+        { text: "An ambulance arrives at the gate for a mass casualty that nobody called in.", allowedZones: ["Gates"], type: "Security" },
+        { text: "EPA regulator arrives for a surprise audit just as a massive oil spill occurs.", allowedZones: ["Gates", "Logistics"], type: "Hazmat" },
+        { text: "A building inspector starts taking pictures and threatening closure.", allowedZones: ["Gates", "Logistics"], type: "Security" },
+        { text: "The previous shift left with master keys missing and a firearm left on a desk.", allowedZones: ["Indoor", "Gates"], type: "Security" },
+        { text: "High-voltage EV flagged for thermal runaway risk was never moved to isolation.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat" },
+        { text: "Perimeter gate found broken and left open overnight with no guard posted.", allowedZones: ["Gates"], type: "Security" },
+        { text: "The previous supervisor left mid-shift with no pass-down; site power is failing.", allowedZones: ["Indoor", "Gates"], type: "Facility" },
+        { text: "Remote Ops Center loses connectivity while a hauler is stuck in the gate.", allowedZones: ["Gates"], type: "Facility" },
+        { text: "3rd Party Transport driver unloads a damaged unit and refuses to sign paperwork.", allowedZones: ["Logistics", "HaulerPath"], type: "Security" },
+        { text: "3rd Party hauler tears the bumper off a staged unit then denies it.", allowedZones: ["Logistics", "HaulerPath", "Gates"], type: "Security" },
+        { text: "Market Ops hauler returns a unit with undocumented biohazardous material.", allowedZones: ["Logistics", "Indoor"], type: "Hazmat" },
+        { text: "Market Ops driver locks keys inside a running hauler blocking Inbound.", allowedZones: ["Logistics", "Gates"], type: "Facility" },
+        { text: "Vendor performing camera maintenance falls from a ladder and is unresponsive.", allowedZones: ["OutdoorGrids", "Logistics", "Gates"], type: "Medical" },
+        { text: "Critical camera server goes down as a suspicious vehicle circles the fence.", allowedZones: ["Gates", "OutdoorGrids"], type: "Security" },
+        { text: "Forcibly removed trespasser returns and begins throwing rocks.", allowedZones: ["OutdoorGrids", "Gates"], type: "Security" },
+        { text: "Main entry gate fails halfway open; the manual override is stripped.", allowedZones: ["Gates"], type: "Facility" },
+        { text: "Contractor severs fiber line, taking down all Wi-Fi and cameras.", allowedZones: ["Indoor", "Logistics", "OutdoorGrids"], type: "Facility" },
+        { text: "Perimeter audit reveals a freshly dug gap underneath the fence.", allowedZones: ["OutdoorGrids"], type: "Security" },
+        { text: "Security rover vehicle begins smoking and rapidly catches fire.", allowedZones: ["OutdoorGrids"], type: "Hazmat" },
+        { text: "Associate discovers a loaded handgun under a seat during detailing.", allowedZones: ["Indoor", "Logistics"], type: "Security" },
+        { text: "A vendor tries to aggressively tailgate an associate vehicle into the site.", allowedZones: ["Gates"], type: "Security" },
+        { text: "3rd party hauler drops a vehicle off ramps, crushing hydraulic controls.", allowedZones: ["Logistics", "Gates"], type: "Medical" },
+        { text: "Vehicle crashes directly into the Guard Shack, injuring the guard.", allowedZones: ["Gates"], type: "Medical" },
+        { text: "Bulk fuel truck pump failure sprays diesel onto an associate.", allowedZones: ["Logistics"], type: "Hazmat" },
+        { text: "Drive-cycle vehicle engine erupts in flames; associate is trapped.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Hazmat" },
+        { text: "Fast Pass scanner drops the barrier arm onto a truck windshield.", allowedZones: ["Gates"], type: "Medical" },
+        { text: "Hauler leaving after-hours ruptures its fuel tank on an exit bollard.", allowedZones: ["Gates"], type: "Hazmat" },
+        { text: "Associate finds a used syringe tucked between the seats of a trade-in.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat" },
+        { text: "Lot magnet sweeper ejects metal debris, shattering a window.", allowedZones: ["OutdoorGrids", "HaulerPath"], type: "Facility" },
+        { text: "Associate exhibits signs of heat stroke and has collapsed.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Medical" },
+        { text: "Drone is seen hovering low over secure inventory grids.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security" },
+        { text: "Associate collapses clutching chest; unresponsive and not breathing.", allowedZones: ["Indoor", "OutdoorGrids", "Logistics"], type: "Medical" },
+        { text: "Associate on scanner walks directly into the path of a moving vehicle.", allowedZones: ["Indoor", "Logistics"], type: "Medical" },
+        { text: "Internal network crash causes a massive hauler backlog.", allowedZones: ["Gates"], type: "Facility" },
+        { text: "Auditor finds a vehicle with smashed windows and blood inside.", allowedZones: ["OutdoorGrids"], type: "Security" },
+        { text: "Associate on 12th hour of OT falls asleep at the wheel and crashes into fence.", allowedZones: ["OutdoorGrids", "HaulerPath"], type: "Medical" },
+        { text: "Morning scan reveals 20 feet of perimeter fence was removed overnight.", allowedZones: ["OutdoorGrids"], type: "Security" },
+        { text: "Associate finds a suspicious taped-up duffel bag under a hauler.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Security" },
+        { text: "Marked cruisers arrive demanding access to search for a suspect.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Associate finds drug paraphernalia in the headliner of a trade-in.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat" },
+        { text: "Windshield repair vendor suffers a severe laceration to their arm.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Medical" },
+        { text: "Stowaway is found sleeping in the cab of a staged customer vehicle.", allowedZones: ["Logistics", "HaulerPath"], type: "Security" },
+        { text: "Police call advising a vehicle delivered today was used in a violent crime.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Security" },
+        { text: "Hydraulic line blows in the bay; the nearest spill kit is empty.", allowedZones: ["Indoor"], type: "Hazmat" },
+        { text: "Separated employee spouse arrives at the gate demanding to see leadership.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Media arrives at the gate asking for comment on a recent dispatch.", allowedZones: ["Gates"], type: "Security" },
+        { text: "High winds knock over a light pole, which is now draped across a hauler.", allowedZones: ["OutdoorGrids", "HaulerPath"], type: "Facility" },
+        { text: "An associate reports being followed by a suspicious vehicle during lot walk.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security" },
+        { text: "Local activists are filming through the fence and shouting at staff.", allowedZones: ["Gates", "OutdoorGrids"], type: "Security" },
+        { text: "Large drone crashes into units, sparking a fire.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Hazmat" },
+        { text: "3rd party vendor caught stealing items from an associate locker.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Hauler driver attempts to bribe guard to skip the queue.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Associate finds backpack with burglary tools near a secure door.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "EV jump-start attempt leads to high-pitched whine and electrical sparks.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat" },
+        { text: "Fuel truck slow leak on the Truckpad goes unnoticed for an hour.", allowedZones: ["Logistics", "HaulerPath"], type: "Hazmat" },
+        { text: "Associate accidentally drinks a chemical stored in a soda bottle.", allowedZones: ["Indoor", "Logistics"], type: "Medical" },
+        { text: "Hauler takes out a fire hydrant, creating a massive geyser.", allowedZones: ["Logistics", "Gates"], type: "Facility" },
+        { text: "Associate collapses after reporting sweet smell from vehicle vents.", allowedZones: ["Logistics", "Indoor"], type: "Hazmat" },
+        { text: "3rd party rig collapses; driver pinned under trailer gear.", allowedZones: ["Logistics", "HaulerPath"], type: "Medical" },
+        { text: "Associate finds skimmer device on the vendor badging kiosk.", allowedZones: ["Indoor", "Gates"], type: "Security" },
+        { text: "Associate reports personal vehicle keyed in employee lot.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Birds nested in a roof area cause associate respiratory distress.", allowedZones: ["Indoor"], type: "Medical" },
+        { text: "Associate found sleeping in a secure area becomes combative.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Power surge locks electronic doors, trapping staff inside.", allowedZones: ["Indoor"], type: "Facility" },
+        { text: "Hauler unloads a vehicle onto another unit, creating a crush hazard.", allowedZones: ["Logistics", "HaulerPath"], type: "Facility" },
+        { text: "Associate reports a person with a rifle in adjacent woods.", allowedZones: ["OutdoorGrids", "Gates"], type: "Security" },
+        { text: "Vendor delivery truck has a stowaway hiding in the cargo box.", allowedZones: ["Logistics", "Gates"], type: "Security" },
+        { text: "Associate reports locker broken into and firearm missing.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Audit driver crashes through a parked unit; both catch fire.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Hazmat" },
+        { text: "Generator found stripped of copper wiring during inspection.", allowedZones: ["OutdoorGrids", "Indoor"], type: "Security" },
+        { text: "Associate struck by falling overhead door with failed sensors.", allowedZones: ["Indoor", "Logistics"], type: "Medical" },
+        { text: "Swarm of bees discovered inside a newly arrived unit.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Medical" },
+        { text: "Associate operating a forklift while intoxicated refuses to stop.", allowedZones: ["Logistics", "Indoor"], type: "Security" },
+        { text: "Suspicious white powder found in envelope at the Guard Shack.", allowedZones: ["Gates"], type: "Hazmat" },
+        { text: "Hauler driver collapses while pulling into the Entry Gate.", allowedZones: ["Gates"], type: "Medical" },
+        { text: "Associate hand caught in high-pressure tire machine.", allowedZones: ["Indoor", "Logistics"], type: "Medical" },
+        { text: "Sprinkler head knocked off, flooding the room.", allowedZones: ["Indoor"], type: "Facility" },
+        { text: "Irate neighbor throwing debris over fence at vehicles.", allowedZones: ["OutdoorGrids"], type: "Security" },
+        { text: "Sinkhole discovered opening directly under the Truckpad.", allowedZones: ["Logistics", "HaulerPath"], type: "Facility" },
+        { text: "Associate missing after shift; personal car still in lot.", allowedZones: ["Gates", "Indoor"], type: "Security" },
+        { text: "Hauler driver refuses to unstrap until provided a free meal.", allowedZones: ["Gates", "Logistics"], type: "Security" },
+        { text: "Radio system fails during heavy fog, preventing communication.", allowedZones: ["Gates"], type: "Facility" },
+        { text: "Vehicle in Ready Line starts rolling toward the building.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Facility" },
+        { text: "Associate reports gas smell in a breakroom area.", allowedZones: ["Indoor"], type: "Hazmat" },
+        { text: "3rd party inspector found in restricted area without badge.", allowedZones: ["Indoor", "Logistics"], type: "Security" },
+        { text: "Main internet line cut by nearby construction crew.", allowedZones: ["Indoor"], type: "Facility" },
+        { text: "Hauler driver gets truck stuck under low awning.", allowedZones: ["Logistics", "Gates"], type: "Facility" },
+        { text: "Associate bitten by stray dog that entered through fence.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Medical" },
+        { text: "Vehicle on lift is unstable and looks likely to tip over.", allowedZones: ["Indoor"], type: "Facility" },
+        { text: "Associate reports co-worker threat against leadership.", allowedZones: ["Indoor", "Logistics"], type: "Security" },
+        { text: "Hauler unloads vehicle actively smoking from dash.", allowedZones: ["Logistics", "HaulerPath"], type: "Hazmat" },
+        { text: "Associate caught attempting to disable camera system.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security" },
+        { text: "Carrier arrives with aggressive animal claiming service dog.", allowedZones: ["Gates", "Logistics"], type: "Security" },
+        { text: "Associate reports hidden stash of alcohol in shop area.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "High-pressure air line explodes in a work area.", allowedZones: ["Indoor"], type: "Medical" },
+        { text: "Hauler tries to leave with unit not cleared for release.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Suspicious person climbing fence into secure zone.", allowedZones: ["Logistics"], type: "Security" },
+        { text: "Ice event causes staging tent roof to collapse.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Facility" },
+        { text: "Vendor found using master key they were never issued.", allowedZones: ["Indoor", "Logistics"], type: "Security" },
+        { text: "Associate suffers severe chemical burn from leaking bottle.", allowedZones: ["Indoor", "Logistics"], type: "Medical" },
+        { text: "Hauler driver refuses to move until supervisor apologizes.", allowedZones: ["Gates", "Logistics"], type: "Security" },
+        { text: "Vehicle battery explodes during charging, spraying acid.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat" },
+        { text: "Associate finds venomous snake under vehicle.", allowedZones: ["OutdoorGrids"], type: "Medical" },
+        { text: "3rd party driver starts physical fight in the lot.", allowedZones: ["Logistics"], type: "Security" },
+        { text: "Exit gate won't open; line of 10 haulers stuck inside.", allowedZones: ["Gates"], type: "Facility" },
+        { text: "Associate left child unattended in a car in employee lot.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Vehicle fire breaks out in photo area during a shoot.", allowedZones: ["Indoor"], type: "Hazmat" },
+        { text: "Associate falls from mezzanine level.", allowedZones: ["Indoor"], type: "Medical" },
+        { text: "Hauler driver attempts staff restroom entry and becomes hostile.", allowedZones: ["Indoor", "Gates"], type: "Security" },
+        { text: "Airbags deploy unexpectedly during detailing, injuring staff.", allowedZones: ["Indoor"], type: "Medical" },
+        { text: "Transformer explodes nearby, sending burning debris onto lot.", allowedZones: ["OutdoorGrids", "Gates"], type: "Hazmat" },
+        { text: "Associate caught bypassing badge-out protocol.", allowedZones: ["Gates", "Indoor"], type: "Security" },
+        { text: "Hauler driver carrying unauthorized passenger in cab.", allowedZones: ["Gates", "Logistics"], type: "Security" },
+        { text: "Associate using site vehicle for personal errands off-site.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Associate reports finding hidden camera in breakroom.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Associate finds nest of repossessed items hidden in shop.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Vehicle fire spreads to 5 other units.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Hazmat" },
+        { text: "Associate struck by driver doing social media challenge.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Medical" },
+        { text: "Vehicle found with entire interior filled with concrete.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Facility" },
+        { text: "Associate reports listening device in leader office.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Associate caught stealing engine during shift change.", allowedZones: ["Indoor", "Logistics"], type: "Security" },
+        { text: "Associate caught swapping parts from customer unit.", allowedZones: ["Indoor", "Logistics"], type: "Security" },
+        { text: "Associate living in repossessed unit in deep lot.", allowedZones: ["OutdoorGrids"], type: "Security" },
+        { text: "Associate caught selling site gear on marketplace app.", allowedZones: ["Indoor", "Logistics"], type: "Security" },
+        { text: "Associate running side business using site tools.", allowedZones: ["Indoor", "Logistics"], type: "Security" },
+        { text: "Associate reports suspicious item targeting site leader.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Associate caught using site vehicle for a drag race.", allowedZones: ["OutdoorGrids", "HaulerPath"], type: "Security" },
+        { text: "Associate smuggling electronics out of repossessed unit.", allowedZones: ["Indoor", "Logistics"], type: "Security" },
+        { text: "Associate found squatting in Electrical Room.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Associate reports drone hover over secure area.", allowedZones: ["OutdoorGrids"], type: "Security" },
+        { text: "3rd party carrier refuses to leave exit lane.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Main power transformer sparks and catches fire.", allowedZones: ["OutdoorGrids"], type: "Hazmat" },
+        { text: "Fuel tank on hauler ruptures during offload.", allowedZones: ["Logistics"], type: "Hazmat" },
+        { text: "Associate slipped on unknown fluid in Detail area.", allowedZones: ["Logistics"], type: "Medical" },
+        { text: "Large sinkhole opens in main hauler path.", allowedZones: ["HaulerPath"], type: "Facility" },
+        { text: "Suspicious package left near site gas manifold.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Staged unit found with all four wheels missing.", allowedZones: ["OutdoorGrids"], type: "Security" },
+        { text: "Group of trespassers cutting fence in deep lot.", allowedZones: ["OutdoorGrids"], type: "Security" },
+        { text: "Associate trapped inside a locked vehicle that has lost power.", allowedZones: ["Logistics"], type: "Medical" },
+        { text: "Unauthorized person found in server room taking photos.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Mechanical failure traps associate hand in vehicle hood.", allowedZones: ["Logistics"], type: "Medical" },
+        { text: "Forklift tire explodes while operator is in motion.", allowedZones: ["Indoor"], type: "Medical" },
+        { text: "Hauler rig jackknifes across main entry blocking all traffic.", allowedZones: ["Gates"], type: "Facility" },
+        { text: "Associate faints due to extreme heat in lot.", allowedZones: ["OutdoorGrids"], type: "Medical" },
+        { text: "Chemical drum tipped over and is flowing to drain.", allowedZones: ["Logistics"], type: "Hazmat" },
+        { text: "Hydraulic lift failure drops vehicle 6 inches suddenly.", allowedZones: ["Indoor"], type: "Facility" },
+        { text: "Associate threatened by irate driver over a long wait.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Wasp nest discovered inside main electrical panel.", allowedZones: ["Indoor"], type: "Medical" },
+        { text: "Severe plumbing backup floods associate restroom.", allowedZones: ["Indoor"], type: "Facility" },
+        { text: "Unsecured unit rolls from staging and hits a guard post.", allowedZones: ["Gates"], type: "Facility" },
+        { text: "Associate discovers bag of white powder in vehicle glovebox.", allowedZones: ["Logistics"], type: "Hazmat" },
+        { text: "Driver bypasses guard shack at high speed.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Audit reveals multiple high-value catalytic converters stolen.", allowedZones: ["OutdoorGrids"], type: "Security" },
+        { text: "Vehicle engine starts by itself in the photo booth.", allowedZones: ["Indoor"], type: "Facility" },
+        { text: "Associate reports co-worker for erratic and unsafe behavior.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Hauler trailer rear-ends a staged unit during staging.", allowedZones: ["Logistics"], type: "Facility" },
+        { text: "Main phone lines for site go dead during an emergency.", type: "Facility", isSiteWide: true },
+        { text: "Police request video footage for a crime committed next door.", allowedZones: ["Gates"], type: "Security" },
+        { text: "Flash flood makes main hauler lane impassable.", allowedZones: ["HaulerPath"], type: "Facility" },
+        { text: "Associate discovers a lit cigarette left on a vehicle seat.", allowedZones: ["Logistics"], type: "Hazmat" },
+        { text: "Site leader discovers office was ransacked overnight.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Associate faints after seeing blood during a minor injury.", allowedZones: ["Indoor"], type: "Medical" },
+        { text: "Drone crashes and becomes stuck on building roof.", allowedZones: ["OutdoorGrids"], type: "Facility" },
+        { text: "High winds knock over a row of temporary fencing.", allowedZones: ["OutdoorGrids"], type: "Facility" },
+        { text: "Associate caught using site printer for personal flyers.", allowedZones: ["Indoor"], type: "Security" },
+        { text: "Suspect seen running into the lot from adjacent property.", allowedZones: ["OutdoorGrids"], type: "Security" },
+        { text: "Vehicle arrived with a weapon visible on the dashboard.", allowedZones: ["Logistics"], type: "Security" },
+        { text: "Associate suffers severe headache after smelling strong fumes.", allowedZones: ["Indoor"], type: "Hazmat" },
+        { text: "Trailer landing gear collapses onto the asphalt.", allowedZones: ["Logistics"], type: "Facility" },
+        { text: "Audit driver crashes into a unit and hides the damage.", allowedZones: ["OutdoorGrids"], type: "Security" }
+    ];
 
-        const complicationsBank = {
-            Security: [
-                { text: "The suspect is live-streaming the encounter on social media.", needsCrowd: false },
-                { text: "A crowd of 15 panicking associates is filming and blocking access.", needsCrowd: true },
-                { text: "Well-meaning associates are trying to physically intervene.", needsCrowd: true },
-                { text: "The suspect is claiming to have a concealed weapon.", needsCrowd: false }
-            ],
-            Hazmat: [
-                { text: "Wind shifts, blowing the toxic cloud toward the break area.", needsCrowd: false },
-                { text: "The nearest spill kit is buried under heavy equipment.", needsCrowd: false },
-                { text: "The spilled substance is melting the floor surface.", needsCrowd: false }
-            ],
-            Medical: [
-                { text: "The victim is combative and confused due to head trauma.", needsCrowd: false },
-                { text: "AED pads are expired and failing to adhere.", needsCrowd: false },
-                { text: "A panicked bystander moved the victim despite spinal risk.", needsCrowd: true }
-            ],
-            Facility: [
-                { text: "Backup generator fails to engage; site is pitch black.", needsCrowd: false },
-                { text: "Master keys for the override panel are missing.", needsCrowd: false },
-                { text: "Local 911 dispatch is currently experiencing an outage.", needsCrowd: false }
-            ],
-            Universal: [
-                { text: "Your phone battery dies immediately after the notification.", needsCrowd: false },
-                { text: "A secondary fender-bender happens simultaneously 50 yards away.", needsCrowd: false },
-                { text: "You are training a brand-new associate who is shadowed to you.", needsCrowd: false }
-            ]
-        };
+    while (incidents.length < 200) { incidents.push(incidents[Math.floor(Math.random() * incidents.length)]); }
 
-        let currentIncLocation = "";
+    const complicationsBank = {
+        Security: [{ text: "The suspect is live-streaming on social media." }, { text: "A crowd of 15 panicking associates is filming." }, { text: "Suspect claims to have a concealed weapon." }],
+        Hazmat: [{ text: "Wind shifts, blowing the cloud toward the break area." }, { text: "The spilled substance is melting the floor." }, { text: "Nearest spill kit is empty." }],
+        Medical: [{ text: "The victim is combative due to head trauma." }, { text: "AED pads are expired." }, { text: "Victim does not speak English." }],
+        Facility: [{ text: "Backup generator fails to engage." }, { text: "Master keys for the override panel are missing." }, { text: "Local 911 dispatch is busy." }],
+        Universal: [{ text: "Your phone battery dies immediately." }, { text: "You are training a brand-new associate." }, { text: "Heavy rain reduces visibility to zero." }]
+    };
 
-        function generateScenario() {
-            const randomIncident = incidents[Math.floor(Math.random() * incidents.length)];
+    let currentIncLocation = "";
+
+    function generateScenario() {
+        const randomIncident = incidents[Math.floor(Math.random() * incidents.length)];
+        let incLoc = "";
+        let formattedIncident = "";
+
+        if (randomIncident.isSiteWide) {
+            incLoc = "Facility-Wide";
+            formattedIncident = `SITE-WIDE EVENT: ${randomIncident.text}`;
+        } else {
             let validLocs = [];
             randomIncident.allowedZones.forEach(z => { validLocs = validLocs.concat(basicZones[z]); });
-
-            let incLoc = "";
-            let formattedIncident = "";
-            const isUnknown = randomIncident.canBeUnknown && Math.random() < 0.15;
-
-            if (isUnknown) {
-                incLoc = "Unknown Location";
-                formattedIncident = `At an Unknown Location, ${randomIncident.text.charAt(0).toLowerCase() + randomIncident.text.slice(1)}`;
-            } else {
-                incLoc = validLocs[Math.floor(Math.random() * validLocs.length)];
-                formattedIncident = `In ${incLoc}, ${randomIncident.text.charAt(0).toLowerCase() + randomIncident.text.slice(1)}`;
-            }
-
-            currentIncLocation = incLoc;
-            const empLoc = allLocations[Math.floor(Math.random() * allLocations.length)];
-            const isCrowdPossible = basicZones.CrowdZone.includes(incLoc);
-            const rawComps = complicationsBank[randomIncident.type].concat(complicationsBank.Universal);
-            const filteredComps = rawComps.filter(c => !c.needsCrowd || isCrowdPossible);
-            const comp = filteredComps[Math.floor(Math.random() * filteredComps.length)].text;
-
-            document.getElementById('scenario-output').style.display = 'block';
-            document.getElementById('out-incident').innerText = formattedIncident;
-            document.getElementById('out-complication').innerText = comp;
-            document.getElementById('out-emp-location').innerText = empLoc;
-            document.getElementById('out-inc-location').innerText = incLoc;
-            document.getElementById('prompt-emp-loc').innerText = empLoc;
-            document.getElementById('out-inc-location').style.color = isUnknown ? "#e74c3c" : "#333";
-
-            document.getElementById('save-pdf-btn').style.display = 'inline-block';
-            document.getElementById('sheets-btn').style.display = 'inline-block';
+            incLoc = validLocs[Math.floor(Math.random() * validLocs.length)];
+            formattedIncident = `In ${incLoc}, ${randomIncident.text.charAt(0).toLowerCase() + randomIncident.text.slice(1)}`;
         }
 
-        async function saveAsPDF() {
-            const element = document.getElementById('scenario-output');
-            const notesArea = document.getElementById('eval-notes');
-            const assocName = document.getElementById('eval-name').value || "Associate";
-            const originalNotes = notesArea.value;
-            const replacementDiv = document.createElement('div');
-            replacementDiv.innerText = originalNotes;
-            replacementDiv.className = "eval-input pdf-mode";
-            notesArea.parentNode.replaceChild(replacementDiv, notesArea);
-            const opt = { margin: 0.5, filename: `TDG_Eval_${assocName}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter' } };
-            await html2pdf().set(opt).from(element).save();
-            replacementDiv.parentNode.replaceChild(notesArea, replacementDiv);
-        }
+        currentIncLocation = incLoc;
+        const empLoc = allLocations[Math.floor(Math.random() * allLocations.length)];
+        const rawComps = complicationsBank[randomIncident.type].concat(complicationsBank.Universal);
+        const comp = rawComps[Math.floor(Math.random() * rawComps.length)].text;
 
-        function sendToGoogleSheets() {
-            const loc = encodeURIComponent(currentIncLocation);
-            const inc = encodeURIComponent(document.getElementById('out-incident').innerText);
-            const comp = encodeURIComponent(document.getElementById('out-complication').innerText);
-            const name = encodeURIComponent(document.getElementById('eval-name').value);
-            const lead = encodeURIComponent(document.getElementById('eval-leader').value);
-            const score = encodeURIComponent(document.getElementById('eval-score').value);
-            const notes = encodeURIComponent(document.getElementById('eval-notes').value);
-            const url = `https://docs.google.com/forms/d/e/1FAIpQLScWAJH9-RbsvEG2uSLDUY9FgGTsYnTuORHAwoXdFpAORJdV2g/viewform?usp=pp_url&entry.316348722=${loc}&entry.680075648=${inc}&entry.1538358417=${comp}&entry.867199779=${name}&entry.1770462856=${lead}&entry.762295271=${score}&entry.1156153402=${notes}`;
-            window.open(url, '_blank');
-        }
+        document.getElementById('scenario-output').style.display = 'block';
+        document.getElementById('out-incident').innerText = formattedIncident;
+        document.getElementById('out-complication').innerText = comp;
+        document.getElementById('out-emp-location').innerText = empLoc;
+        document.getElementById('out-inc-location').innerText = incLoc;
+        document.getElementById('prompt-emp-loc').innerText = empLoc;
+        
+        document.getElementById('out-inc-location').style.color = randomIncident.isSiteWide ? "#e67e22" : "#333";
+        document.getElementById('save-pdf-btn').style.display = 'inline-block';
+        document.getElementById('sheets-btn').style.display = 'inline-block';
+    }
 
-        window.onload = function() { changeSite(); };
-    </script>
+    async function saveAsPDF() {
+        const element = document.getElementById('scenario-output');
+        const notesArea = document.getElementById('eval-notes');
+        const assocName = document.getElementById('eval-name').value || "Associate";
+        const originalNotes = notesArea.value;
+        const replacementDiv = document.createElement('div');
+        replacementDiv.innerText = originalNotes;
+        replacementDiv.className = "eval-input pdf-mode";
+        notesArea.parentNode.replaceChild(replacementDiv, notesArea);
+        const opt = { margin: 0.5, filename: `TDG_Eval_${assocName}.pdf`, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'letter' } };
+        await html2pdf().set(opt).from(element).save();
+        replacementDiv.parentNode.replaceChild(notesArea, replacementDiv);
+    }
+
+    function sendToGoogleSheets() {
+        const loc = encodeURIComponent(currentIncLocation);
+        const inc = encodeURIComponent(document.getElementById('out-incident').innerText);
+        const comp = encodeURIComponent(document.getElementById('out-complication').innerText);
+        const name = encodeURIComponent(document.getElementById('eval-name').value);
+        const lead = encodeURIComponent(document.getElementById('eval-leader').value);
+        const score = encodeURIComponent(document.getElementById('eval-score').value);
+        const notes = encodeURIComponent(document.getElementById('eval-notes').value);
+        const url = `https://docs.google.com/forms/d/e/1FAIpQLScWAJH9-RbsvEG2uSLDUY9FgGTsYnTuORHAwoXdFpAORJdV2g/viewform?usp=pp_url&entry.316348722=${loc}&entry.680075648=${inc}&entry.1538358417=${comp}&entry.867199779=${name}&entry.1770462856=${lead}&entry.762295271=${score}&entry.1156153402=${notes}`;
+        window.open(url, '_blank');
+    }
+
+    window.onload = function() { changeSite(); };
+</script>
 </body>
 </html>
