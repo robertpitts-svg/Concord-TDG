@@ -1,3 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CON-IC TDG - Ultimate Multi-Site</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { max-width: 1000px; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; width: 100%; box-sizing: border-box; }
+        h1 { color: #0056b3; margin-top: 0; }
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center; }
+        select { padding: 12px; font-size: 16px; border-radius: 5px; border: 2px solid #0056b3; cursor: pointer; font-weight: bold; background-color: #fff; }
+        button { padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; transition: opacity 0.3s; }
+        .btn-gen { background-color: #0056b3; color: white; }
+        .btn-pdf { background-color: #27ae60; color: white; display: none; }
+        .btn-sheets { background-color: #0f9d58; color: white; display: none; }
+        button:hover { opacity: 0.9; }
+        #map-container { margin-bottom: 20px; }
+        #map-image { display: block; max-width: 100%; height: auto; border: 2px solid #ddd; border-radius: 5px; margin: 0 auto; background-color: #eee; min-height: 200px; }
+        #scenario-output { margin-top: 30px; padding: 30px; background-color: #fff; border: 1px solid #ddd; text-align: left; border-radius: 8px; display: none; }
+        .label { font-weight: bold; color: #0056b3; }
+        .prompt-box { margin-top: 20px; padding: 15px; background-color: #f9f9f9; border: 1px dashed #aaa; }
+        .eval-section { margin-top: 25px; padding-top: 20px; border-top: 2px solid #0056b3; }
+        .eval-input { width: 100%; padding: 10px; margin-top: 5px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; box-sizing: border-box; }
+        .eval-row { display: flex; gap: 20px; }
+        .eval-row > div { flex: 1; }
+        .pdf-mode { height: auto !important; overflow: visible !important; border: none !important; padding: 0 !important; font-size: 14px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Incident Response TDG Generator</h1>
+        
+        <div class="controls">
+            <select id="site-selector" onchange="changeSite()">
+                <option value="Concord">Concord, NC</option>
+                <option value="HainesCity">Haines City, FL</option>
+                <option value="Fairburn">Fairburn, GA</option>
+                <option value="Chesterfield">Chesterfield, VA</option>
+                <option value="Bessemer">Bessemer, AL</option>
+                <option value="WinderHogan">Winder (Hogan Rd)</option>
+                <option value="WinderPierce">Winder (Pierce St)</option>
+                <option value="WestMemphis">West Memphis, AR</option>
+                <option value="Orlando">Orlando, FL</option>
+                <option value="KansasCity">Kansas City, MO</option>
+            </select>
+
+            <select id="comp-selector" onchange="updateComplicationLive()">
+                <option value="Random">🎲 Random Complication</option>
+                <option value="None">✅ None (Standard Response)</option>
+                <option value="Heavy rain and poor visibility.">🌧️ Heavy Rain / Poor Visibility</option>
+                <option value="Snow or ice on the ground.">❄️ Snow / Ice on ground</option>
+                <option value="A staged vehicle is blocking the primary access path.">🚧 Vehicle blocking path</option>
+                <option value="Radio dead zone / poor cell service in this area.">📵 Radio / Cell dead zone</option>
+                <option value="A crowd of panicking associates has gathered.">🧍‍♂️🧍‍♀️ Crowd gathering</option>
+                <option value="An irate bystander or driver is interfering.">🗣️ Irate bystander</option>
+                <option value="Shift change is actively occurring right now.">⏰ Shift change traffic</option>
+                <option value="The nearest emergency kit/spill kit is empty.">🧰 Emergency kit empty</option>
+                <option value="A localized power outage makes the area very dark.">🔦 Area is completely dark</option>
+                <option value="You are training a brand-new associate who is shadowing you.">🔰 Training a new associate</option>
+            </select>
+
+            <button class="btn-gen" onclick="generateScenario()">Generate Scenario</button>
+            <button id="save-pdf-btn" class="btn-pdf" onclick="saveAsPDF()">Save to PDF</button>
+            <button id="sheets-btn" class="btn-sheets" onclick="sendToGoogleSheets()">Log to Sheets</button>
+        </div>
+        
+        <div id="map-container">
+            <img id="map-image" src="map_screenshot.png" alt="Facility Map">
+        </div>
+
+        <div id="scenario-output">
+            <div style="margin-bottom: 20px;">
+                <h2 style="margin:0; color: #0056b3;">TDG Performance Evaluation</h2>
+                <p style="color: #555; font-size: 14px;">Evaluator Reference Sheet</p>
+            </div>
+            <p><span class="label">Incident:</span> <span id="out-incident" style="font-size: 16px; color:#e74c3c; font-weight:bold;"></span></p>
+            <p><span class="label">Complication:</span> <span id="out-complication" style="font-weight:bold;"></span></p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+            <p><span class="label">Associate's Start Location:</span> <span id="out-emp-location"></span></p>
+            <p><span class="label">Incident Location:</span> <span id="out-inc-location" style="font-weight:bold;"></span></p>
+            <div class="prompt-box">
+                <span class="label">Leader Facilitation Prompt:</span><br>
+                <i>"You are currently at <strong id="prompt-emp-loc"></strong> when you receive a phone call notifying you of this situation. Walk me through your first three actions."</i>
+            </div>
+            <div class="eval-section">
+                <h3 style="margin-top: 0; color: #333;">Evaluation Details</h3>
+                <div class="eval-row">
+                    <div>
+                        <label class="label">Associate Name:</label>
+                        <input type="text" id="eval-name" class="eval-input" placeholder="Enter associate name...">
+                    </div>
+                    <div>
+                        <label class="label">Evaluator Name:</label>
+                        <input type="text" id="eval-leader" class="eval-input" placeholder="Your name...">
+                    </div>
+                    <div>
+                        <label class="label">Final Score (0-10):</label>
+                        <input type="number" id="eval-score" class="eval-input" min="0" max="10" placeholder="e.g., 8">
+                    </div>
+                </div>
+                <label class="label">Evaluator Notes & Tactical Steps Taken:</label>
+                <textarea id="eval-notes" class="eval-input" rows="6" placeholder="Document the response..."></textarea>
+            </div>
+        </div>
+    </div>
+
 <script>
     const basicZones = {
         Indoor: ["Build", "Photo", "Cosmetics/Paint", "Server Room", "Electrical Room"],
@@ -143,7 +252,7 @@
         { text: "Associate operating a forklift while intoxicated refuses to stop.", allowedZones: ["Logistics", "Indoor"] },
         { text: "Suspicious white powder found in envelope at the Guard Shack.", allowedZones: ["Gates"] },
         { text: "Hauler driver collapses while pulling into the Entry Gate.", allowedZones: ["Gates"] },
-        { text: "Associate hand caught in high-pressure tire machine.", allowedZones: ["Build", "Inspection"] }, // Specific locations!
+        { text: "Associate hand caught in high-pressure tire machine.", allowedZones: ["Build", "Inspection"] },
         { text: "Sprinkler head knocked off, flooding the room.", allowedZones: ["Indoor"] },
         { text: "Irate neighbor throwing debris over fence at vehicles.", allowedZones: ["OutdoorGrids"] },
         { text: "Sinkhole discovered opening directly under the Truckpad.", allowedZones: ["Truckpad"] },
@@ -258,7 +367,6 @@
         } else {
             let validLocs = [];
             randomIncident.allowedZones.forEach(z => {
-                // If the zone is a broad category, add all its rooms. Otherwise, add the specific room itself.
                 if (basicZones[z]) {
                     validLocs = validLocs.concat(basicZones[z]);
                 } else {
