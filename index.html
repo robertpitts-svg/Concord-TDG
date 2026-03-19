@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CON-IC TDG - Multi-Site Edition</title>
+    <title>CON-IC TDG - Elite Version</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .container { max-width: 1000px; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: center; width: 100%; box-sizing: border-box; }
         h1 { color: #0056b3; margin-top: 0; }
-        .controls { margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center; }
-        select { padding: 12px; font-size: 16px; border-radius: 5px; border: 2px solid #0056b3; cursor: pointer; font-weight: bold; }
+        .controls { margin-bottom: 20px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         button { padding: 12px 24px; font-size: 16px; font-weight: bold; border-radius: 5px; cursor: pointer; border: none; transition: opacity 0.3s; }
         .btn-gen { background-color: #0056b3; color: white; }
         .btn-pdf { background-color: #27ae60; color: white; display: none; }
@@ -31,22 +30,15 @@
 <body>
 
     <div class="container">
-        <h1>Incident Response TDG Generator</h1>
-        
+        <h1>CON-IC Incident Response TDG</h1>
         <div class="controls">
-            <select id="site-selector" onchange="changeSite()">
-                <option value="Concord">Concord, NC</option>
-                <option value="Atlanta">Atlanta, GA (Example)</option>
-                <option value="Dallas">Dallas, TX (Example)</option>
-            </select>
-
             <button class="btn-gen" onclick="generateScenario()">Generate Scenario</button>
             <button id="save-pdf-btn" class="btn-pdf" onclick="saveAsPDF()">Save to PDF</button>
             <button id="sheets-btn" class="btn-sheets" onclick="sendToGoogleSheets()">Log to Sheets</button>
         </div>
         
         <div id="map-container">
-            <img id="map-image" src="" alt="Facility Map">
+            <img id="map-image" src="map_screenshot.png" alt="Facility Map">
         </div>
 
         <div id="scenario-output">
@@ -86,96 +78,140 @@
     </div>
 
     <script>
-        // ==========================================
-        // 1. SITE CONFIGURATION (ADD NEW SITES HERE)
-        // ==========================================
-        const siteData = {
-            "Concord": {
-                mapURL: "map_screenshot.png", // Or Imgur Link
-                zones: {
-                    Indoor: ["Detail", "Main_Build", "Build_1", "Build_2", "Build_3", "Build_4", "Paint_BLDG", "Post_Prod", "Post_Prod1", "Post_Prod2", "Post_Prod_3", "PAINT_PARTS", "Parts", "QC_Photo", "QC", "Inspection", "PHOTO_COMPLETE", "Photo"],
-                    Logistics: ["INBOUND", "OUTBOUND", "SI_Inbound", "Logistics", "TRUCK_PAD", "Prestage_2", "STOCK_IN_1A", "STOCK_IN_1B", "STOCK_IN_1C", "STOCK_IN_2A", "STOCK_IN_2B", "STOCK_IN_2C", "STOCK_IN_3A", "STOCK_IN_3B", "STOCK_IN_3C", "STOCK_IN_4A", "STOCK_IN_4B", "STOCK_IN_4C", "SI-PENDING", "SI_Ready", "SI_Complete", "SI_Complete_2", "Rework_1", "Rework_2", "Tires", "SUBLET_1", "SUBLET_2", "SUBLET_3", "DIAG_KEYS"],
-                    Gates: ["ENTRY_GATE", "EXIT_GATE", "DRIVEWAY", "Detail_Entrance", "Guard Shack"],
-                    HaulerPath: ["5B", "5C", "6A", "6B", "6C", "6D", "6E", "6F", "6G", "6H", "INBOUND", "OUTBOUND", "ENTRY_GATE", "EXIT_GATE"],
-                    OutdoorGrids: ["7A", "7B", "7C", "7D", "7E", "7F", "7G", "7H", "8A", "8B", "8C", "8D", "8E", "8F", "8G", "8H", "8I", "9A", "9B", "9C", "9D", "9E", "9F", "10A", "10B", "10C", "10D", "10E", "10F", "11A", "11B", "11C", "11D", "11E", "11F", "112", "12B", "12C", "12D", "12E", "12F", "13A", "13B", "13C", "13D", "13E", "13F", "13G", "14A", "14B", "14C", "14D", "14E", "14F", "OFL_A", "OFL_B", "OFL_C", "Mkt.Ops_1", "Mkt.Ops_2", "Mkt.Ops_3"],
-                    CrowdZone: ["Main_Build", "Detail", "ENTRY_GATE", "EXIT_GATE", "DRIVEWAY", "Detail_Entrance"]
-                }
-            },
-            "Atlanta": {
-                mapURL: "https://via.placeholder.com/800x400.png?text=Atlanta+Map", // Swap with real Atlanta Map
-                zones: {
-                    Indoor: ["ATL_Main_Office", "ATL_Detail", "ATL_Paint"],
-                    Logistics: ["ATL_Staging_1", "ATL_Staging_2", "ATL_Sublet"],
-                    Gates: ["ATL_Main_Gate", "ATL_Guard_House"],
-                    HaulerPath: ["ATL_Truck_Lane_A", "ATL_Truck_Lane_B"],
-                    OutdoorGrids: ["Grid_A1", "Grid_A2", "Grid_B1"],
-                    CrowdZone: ["ATL_Main_Office", "ATL_Main_Gate"]
-                }
-            },
-            "Dallas": {
-                mapURL: "https://via.placeholder.com/800x400.png?text=Dallas+Map", // Swap with real Dallas Map
-                zones: {
-                    Indoor: ["DAL_Hub", "DAL_QC"],
-                    Logistics: ["DAL_Inbound", "DAL_Outbound"],
-                    Gates: ["DAL_Entry", "DAL_Exit"],
-                    HaulerPath: ["DAL_Hauler_Route"],
-                    OutdoorGrids: ["Lot_1", "Lot_2", "Lot_3"],
-                    CrowdZone: ["DAL_Hub"]
-                }
-            }
+        const mapURL = "map_screenshot.png"; 
+        document.getElementById('map-image').src = mapURL;
+
+        const locationZones = {
+            Indoor: ["Detail", "Main_Build", "Build_1", "Build_2", "Build_3", "Build_4", "Paint_BLDG", "Post_Prod", "Post_Prod1", "Post_Prod2", "Post_Prod_3", "PAINT_PARTS", "Parts", "QC_Photo", "QC", "Inspection", "PHOTO_COMPLETE", "Photo"],
+            Logistics: ["INBOUND", "OUTBOUND", "SI_Inbound", "Logistics", "TRUCK_PAD", "Prestage_2", "STOCK_IN_1A", "STOCK_IN_1B", "STOCK_IN_1C", "STOCK_IN_2A", "STOCK_IN_2B", "STOCK_IN_2C", "STOCK_IN_3A", "STOCK_IN_3B", "STOCK_IN_3C", "STOCK_IN_4A", "STOCK_IN_4B", "STOCK_IN_4C", "SI-PENDING", "SI_Ready", "SI_Complete", "SI_Complete_2", "Rework_1", "Rework_2", "Tires", "SUBLET_1", "SUBLET_2", "SUBLET_3", "DIAG_KEYS"],
+            Gates: ["ENTRY_GATE", "EXIT_GATE", "DRIVEWAY", "Detail_Entrance", "Guard Shack"],
+            HaulerPath: ["5B", "5C", "6A", "6B", "6C", "6D", "6E", "6F", "6G", "6H", "INBOUND", "OUTBOUND", "ENTRY_GATE", "EXIT_GATE"],
+            OutdoorGrids: ["7A", "7B", "7C", "7D", "7E", "7F", "7G", "7H", "8A", "8B", "8C", "8D", "8E", "8F", "8G", "8H", "8I", "9A", "9B", "9C", "9D", "9E", "9F", "10A", "10B", "10C", "10D", "10E", "10F", "11A", "11B", "11C", "11D", "11E", "11F", "112", "12B", "12C", "12D", "12E", "12F", "13A", "13B", "13C", "13D", "13E", "13F", "13G", "14A", "14B", "14C", "14D", "14E", "14F", "OFL_A", "OFL_B", "OFL_C", "Mkt.Ops_1", "Mkt.Ops_2", "Mkt.Ops_3"],
+            CrowdZone: ["Main_Build", "Detail", "ENTRY_GATE", "EXIT_GATE", "DRIVEWAY", "Detail_Entrance"]
         };
 
-        // ==========================================
-        // 2. DYNAMIC SITE VARIABLES
-        // ==========================================
-        let currentSite = "";
-        let locationZones = {};
-        let allLocations = [];
+        const allLocations = [].concat(locationZones.Indoor, locationZones.Logistics, locationZones.Gates, locationZones.OutdoorGrids);
 
-        // This function runs whenever the dropdown menu is changed
-        function changeSite() {
-            currentSite = document.getElementById('site-selector').value;
-            
-            // Swap the Map Image
-            document.getElementById('map-image').src = siteData[currentSite].mapURL;
-            
-            // Swap the active zones
-            locationZones = siteData[currentSite].zones;
-            
-            // Rebuild the master list of all possible locations for the new site
-            allLocations = [].concat(locationZones.Indoor, locationZones.Logistics, locationZones.Gates, locationZones.OutdoorGrids);
-            
-            // Hide the scenario output box so they have to generate a new one
-            document.getElementById('scenario-output').style.display = 'none';
-        }
-
-        // ==========================================
-        // 3. YOUR MASTER SCENARIOS & COMPLICATIONS
-        // ==========================================
-        
         const incidents = [
-            // PASTE ALL 200 OF YOUR { text: "...", allowedZones: [...], ... } INCIDENTS HERE!
+            // --- NEW: TOP 10 RISK SCENARIOS ---
+            { text: "An associate slips on a patch of black ice and cannot get up, complaining of severe hip pain.", allowedZones: ["OutdoorGrids", "Logistics", "Gates", "HaulerPath"], type: "Medical", canBeUnknown: true },
+            { text: "A hauler driver slipped while descending from their cab and has suffered a visible leg fracture.", allowedZones: ["HaulerPath", "Logistics"], type: "Medical", canBeUnknown: true },
+            { text: "During unloading, a tie-down strap snapped and violently struck an associate in the face. They are bleeding heavily.", allowedZones: ["Logistics", "HaulerPath"], type: "Medical", canBeUnknown: true },
+            { text: "A vehicle being loaded onto a hauler has slipped off the ramp and is hanging precariously over the edge.", allowedZones: ["Logistics", "HaulerPath"], type: "Facility", canBeUnknown: true },
+            { text: "An associate attempting to push a dead vehicle reports a sudden, severe back spasm and has collapsed to their knees.", allowedZones: ["Indoor", "Logistics", "OutdoorGrids"], type: "Medical", canBeUnknown: true },
+            { text: "An associate got their hand caught in a pinch point under a vehicle hood and is actively trapped.", allowedZones: ["Indoor", "Logistics"], type: "Medical", canBeUnknown: true },
+            { text: "A mechanic suffered a severe laceration from a wheel caliper; bleeding is not stopping with direct pressure.", allowedZones: ["Indoor", "Logistics"], type: "Medical", canBeUnknown: true },
+            { text: "A 55-gallon drum of waste oil tipped over during transport and is actively flowing toward a storm drain.", allowedZones: ["Indoor", "Logistics", "HaulerPath"], type: "Hazmat", canBeUnknown: true },
+            { text: "An associate found a bag of white powder and needles in a center console, and is now feeling dizzy and numb.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat", canBeUnknown: true },
+            { text: "A vehicle arrived with seats soaked in blood and suspected biohazardous material. The associate who opened it is panicked.", allowedZones: ["Indoor", "Logistics"], type: "Hazmat", canBeUnknown: true },
+            { text: "Safe & Secure cameras show two individuals actively cutting the perimeter fence.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: false },
+            { text: "A hauler driver reports seeing someone actively hot-wiring a staged vehicle in the outbound lanes.", allowedZones: ["Logistics", "HaulerPath"], type: "Security", canBeUnknown: true },
+            { text: "A perimeter inspection reveals a massive hole cut into the chain-link fence and fresh tire tracks leading out.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: false },
+            { text: "Two associates are screaming at each other; one just threatened to go to their car to get a weapon.", allowedZones: ["Indoor", "Logistics", "OutdoorGrids"], type: "Security", canBeUnknown: true },
+            { text: "An irate customer or rejected 3rd-party driver has bypassed the Guard Shack and is speeding onto the lot.", allowedZones: ["Gates", "Logistics", "HaulerPath"], type: "Security", canBeUnknown: false },
+            { text: "An associate claims another employee assaulted them in the locker room and the aggressor is still on site.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: true },
+            { text: "It's 100°F outside. An associate performing lot audits has collapsed and is non-responsive (suspected heat stroke).", allowedZones: ["OutdoorGrids", "Logistics"], type: "Medical", canBeUnknown: true },
+            { text: "A severe winter storm has caused the roof over the wash bay to groan loudly and begin bowing inward.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: false },
+            { text: "Wildfire smoke has pushed the AQI past 300. Multiple associates outside are experiencing acute respiratory distress.", allowedZones: ["OutdoorGrids", "Logistics", "Gates", "HaulerPath"], type: "Medical", canBeUnknown: true },
+            { text: "High winds have knocked over a light pole, which is now resting on a hauler cab with live wires.", allowedZones: ["OutdoorGrids", "Gates", "Logistics", "HaulerPath"], type: "Facility", canBeUnknown: true },
+
+            // --- ORIGINAL HAZMAT / FIRE ---
+            { text: "A forklift punctured a 55-gallon drum of solvent. It is spilling into a drain, and fumes are causing dizziness.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: true },
+            { text: "A pressurized line burst at the chemical station, spraying caustic cleaner into an associate's face.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: true },
+            { text: "A thermal runaway event has started in an EV battery. Thick, toxic white smoke is venting and sparking.", allowedZones: ["Indoor", "OutdoorGrids", "Logistics", "HaulerPath"], type: "Hazmat", canBeUnknown: true },
+            { text: "A massive oil spill has occurred across a main driving lane, making the surface extremely slick.", allowedZones: ["Indoor", "Logistics", "Gates", "HaulerPath"], type: "Hazmat", canBeUnknown: true },
+            { text: "A small electrical fire has started in a battery charging rack, creating thick black smoke.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: true },
+            { text: "A localized fire has broken out in the Paint Building mixing room.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: false },
+            { text: "Strong propane smell is reported near the forklift cage.", allowedZones: ["Logistics", "Indoor"], type: "Hazmat", canBeUnknown: true },
+            { text: "A hauler is leaking fuel at an alarming rate while staged.", allowedZones: ["Logistics", "HaulerPath"], type: "Hazmat", canBeUnknown: true },
+            { text: "A cleaning associate mixed chemicals, creating a toxic vapor cloud in a confined space.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: true },
+            { text: "A fire alarm is triggered in the Main Building, but no smoke is visible yet.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: false },
+
+            // --- ORIGINAL SECURITY ---
+            { text: "A visibly agitated individual jumped the fence and is aggressively pulling door handles on staged vehicles.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security", canBeUnknown: true },
+            { text: "An individual claiming to be a '3rd party driver' bypassed security and is taking photos of VIN plates and interiors.", allowedZones: ["OutdoorGrids", "Gates", "Logistics", "HaulerPath"], type: "Security", canBeUnknown: true },
+            { text: "A suspicious vehicle has been idling in the driveway with the lights off for over 30 minutes.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
+            { text: "A terminated associate has returned to the site and is refusing to leave the lobby.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
+            { text: "An associate reports their personal vehicle was broken into in the employee lot.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: false },
+            { text: "A drone is seen hovering low over the secure inventory grids.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Security", canBeUnknown: true },
+            { text: "Two associates are engaged in a heated verbal altercation that looks physical.", allowedZones: ["Indoor", "Logistics"], type: "Security", canBeUnknown: true },
+            { text: "A keypad at a secure entrance appears to have been tampered with or pried open.", allowedZones: ["Indoor", "Gates"], type: "Security", canBeUnknown: false },
+            { text: "An unknown individual is found wandering in the secure Production area without a badge.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: true },
+            { text: "A panic alarm button was triggered in the Guard Shack.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
+
+            // --- ORIGINAL MEDICAL / MULTI-VEHICLE ---
+            { text: "A market ops hauler and a box truck collided head-on. The driver is trapped and bleeding.", allowedZones: ["HaulerPath"], type: "Medical", canBeUnknown: true },
+            { text: "A vehicle shifted on a lift, pinning a mechanic's arm between the frame and the lift arm.", allowedZones: ["Indoor"], type: "Medical", canBeUnknown: true },
+            { text: "An associate slipped and suffered a massive head strike on concrete; they are unconscious.", allowedZones: ["Indoor", "OutdoorGrids", "Gates", "Logistics", "HaulerPath"], type: "Medical", canBeUnknown: true },
+            { text: "A driver has suffered a suspected heart attack inside a hauler cab; the truck is idling in gear.", allowedZones: ["Logistics", "HaulerPath"], type: "Medical", canBeUnknown: true },
+            { text: "Multiple vehicles collided in a staging lane; at least one driver is complaining of neck pain.", allowedZones: ["Logistics", "HaulerPath", "OutdoorGrids"], type: "Medical", canBeUnknown: true },
+            { text: "An associate has been struck by a moving forklift and is unable to stand.", allowedZones: ["Indoor", "Logistics"], type: "Medical", canBeUnknown: true },
+            { text: "A person is found unresponsive in the driver's seat of a recently arrived vehicle.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Medical", canBeUnknown: true },
+            { text: "An associate has a severe laceration from a piece of sharp metal on a damaged hauler.", allowedZones: ["Logistics", "HaulerPath"], type: "Medical", canBeUnknown: true },
+            { text: "A hauler driver fell from the upper deck of their trailer and is non-verbal.", allowedZones: ["Logistics", "HaulerPath"], type: "Medical", canBeUnknown: true },
+            { text: "An associate is exhibiting signs of heat stroke and has collapsed.", allowedZones: ["OutdoorGrids", "Logistics"], type: "Medical", canBeUnknown: true },
+
+            // --- ORIGINAL FACILITY SAFETY / SECURITY CONCERNS ---
+            { text: "A hauler clipped a gate post, disabling the entry sensor and trapping the truck half-in, half-out.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false }, 
+            { text: "A piece of heavy equipment suffered a mechanical seizure, blocking a main emergency exit path.", allowedZones: ["Indoor", "Logistics", "HaulerPath"], type: "Facility", canBeUnknown: true },
+            { text: "A power surge has frozen the ENTRY_GATE open and the EXIT_GATE closed during peak arrival.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
+            { text: "A fire sprinkler head was struck and is flooding the electrical panel area.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: true },
+            { text: "A sinkhole has appeared in a main transit lane, large enough to swallow a vehicle tire.", allowedZones: ["Logistics", "HaulerPath", "OutdoorGrids"], type: "Facility", canBeUnknown: true },
+            { text: "High winds have knocked over a lighting pole, which is now draped across the perimeter fence.", allowedZones: ["OutdoorGrids", "Gates"], type: "Facility", canBeUnknown: true },
+            { text: "A gas line was struck by a hauler near the building exterior.", allowedZones: ["Logistics", "Gates"], type: "Facility", canBeUnknown: false },
+            { text: "The main facility power has failed; all emergency lighting is active but visibility is poor.", allowedZones: ["Indoor"], type: "Facility", canBeUnknown: false },
+            { text: "A large overhead door has fallen off its track and is hanging dangerously.", allowedZones: ["Indoor", "Logistics"], type: "Facility", canBeUnknown: true },
+            { text: "A suspicious package has been found leaning against the main gas manifold.", allowedZones: ["Gates", "Logistics"], type: "Facility", canBeUnknown: false },
+
+            // --- REPEAT/EXPANSION TO HIT 70 ---
+            { text: "A hauler driver reports seeing someone crawl under a trailer in the dark.", allowedZones: ["Logistics", "HaulerPath"], type: "Security", canBeUnknown: true },
+            { text: "A chemical spill is spreading toward the storm drain in the Truck Pad.", allowedZones: ["Logistics"], type: "Hazmat", canBeUnknown: true },
+            { text: "A vehicle fire has broken out in the 10-Series parking grid.", allowedZones: ["OutdoorGrids"], type: "Hazmat", canBeUnknown: false },
+            { text: "An associate is trapped in a vehicle that has lost power and the doors are locked/malfunctioning.", allowedZones: ["Logistics", "OutdoorGrids"], type: "Medical", canBeUnknown: true },
+            { text: "A hauler has jackknifed across the driveway, blocking all incoming and outgoing traffic.", allowedZones: ["Gates"], type: "Facility", canBeUnknown: false },
+            { text: "A trespasser is spotted on the roof of the Main Building.", allowedZones: ["Indoor"], type: "Security", canBeUnknown: false },
+            { text: "Severe fluid leak from a vehicle inside the Detail building is creating a massive fumes hazard.", allowedZones: ["Indoor"], type: "Hazmat", canBeUnknown: true },
+            { text: "A hauler driver is refusing to move their truck and is blocking the gate intentionally.", allowedZones: ["Gates"], type: "Security", canBeUnknown: false },
+            { text: "An associate has a hand caught in a high-pressure wash system.", allowedZones: ["Indoor"], type: "Medical", canBeUnknown: true },
+            { text: "The perimeter fence has been cut or breached near the 14-Series grid.", allowedZones: ["OutdoorGrids"], type: "Security", canBeUnknown: false }
         ];
 
         const complicationsBank = {
-            // PASTE YOUR COMPLICATIONS BANK HERE!
+            Security: [
+                { text: "The suspect is actively trying to blend into a crowd of departing associates.", needsCrowd: true },
+                { text: "A crowd of 15 panicking associates has formed, filming on phones and blocking access.", needsCrowd: true },
+                { text: "When confronted, the individual becomes verbally aggressive and refuses to follow instructions.", needsCrowd: false },
+                { text: "Bystanders are shouting conflicting information, making it hard to identify the threat.", needsCrowd: true }
+            ],
+            Hazmat: [
+                { text: "The power grid to that section has tripped; it is very dark and hard to see the spill edge.", needsCrowd: false },
+                { text: "The only nearby emergency spill kit is buried under heavy equipment.", needsCrowd: false },
+                { text: "A ventilation fan is broken, causing toxic fumes to build up rapidly.", needsCrowd: false },
+                { text: "The primary response route is blocked by a staged hauler.", needsCrowd: false }
+            ],
+            Medical: [
+                { text: "The victim does not speak English and witnesses are unable to translate.", needsCrowd: false },
+                { text: "Witnesses at the scene are becoming hysterical, interfering with first aid.", needsCrowd: true },
+                { text: "The path to the victim is slick with fluids, creating a hazard for responders.", needsCrowd: false }
+            ],
+            Facility: [
+                { text: "The main phone lines for the facility are down; you must use personal devices only.", needsCrowd: false },
+                { text: "An automated gate sensor has failed, trapping responding vehicles inside/outside.", needsCrowd: false },
+                { text: "A hauler is currently blocking the only access lane to this grid.", needsCrowd: false }
+            ],
+            Universal: [
+                { text: "Your phone battery is at 1% and dies as soon as you receive the notification.", needsCrowd: false },
+                { text: "A sudden heavy downpour has reduced visibility and made the ground slick.", needsCrowd: false }
+            ]
         };
 
-        // ==========================================
-        // 4. THE GENERATOR ENGINE
-        // ==========================================
         let currentIncLocation = "";
 
         function generateScenario() {
-            // Pick a random employee start location from the ACTIVE SITE's locations
-            let empLoc = Math.random() < 0.65 ? siteData[currentSite].zones.Gates[0] : allLocations[Math.floor(Math.random() * allLocations.length)];
-            
+            let empLoc = Math.random() < 0.65 ? "Guard Shack" : allLocations[Math.floor(Math.random() * allLocations.length)];
             const randomIncident = incidents[Math.floor(Math.random() * incidents.length)];
-            
             let validIncidentLocations = [];
-            randomIncident.allowedZones.forEach(zone => { 
-                validIncidentLocations = validIncidentLocations.concat(locationZones[zone]); 
-            });
+            randomIncident.allowedZones.forEach(zone => { validIncidentLocations = validIncidentLocations.concat(locationZones[zone]); });
 
             let incLoc = "";
             let formattedIncident = "";
@@ -211,12 +247,53 @@
             document.getElementById('sheets-btn').style.display = 'inline-block';
         }
 
-        // [PASTE YOUR EXISTING saveAsPDF() and sendToGoogleSheets() functions here]
+        async function saveAsPDF() {
+            const element = document.getElementById('scenario-output');
+            const notesArea = document.getElementById('eval-notes');
+            const assocName = document.getElementById('eval-name').value || "Associate";
 
-        // INITIALIZE THE FIRST SITE ON PAGE LOAD
-        window.onload = function() {
-            changeSite();
-        };
+            const originalNotes = notesArea.value;
+            const replacementDiv = document.createElement('div');
+            replacementDiv.innerText = originalNotes;
+            replacementDiv.className = "eval-input pdf-mode";
+            
+            notesArea.parentNode.replaceChild(replacementDiv, notesArea);
+
+            const opt = { 
+                margin: 0.5, 
+                filename: `TDG_Eval_${assocName.replace(/\s+/g, '_')}.pdf`, 
+                html2canvas: { scale: 2 }, 
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } 
+            };
+
+            await html2pdf().set(opt).from(element).save();
+            replacementDiv.parentNode.replaceChild(notesArea, replacementDiv);
+        }
+
+        function sendToGoogleSheets() {
+            const locationForCategoryColumn = encodeURIComponent(currentIncLocation);
+            const inc = encodeURIComponent(document.getElementById('out-incident').innerText);
+            const comp = encodeURIComponent(document.getElementById('out-complication').innerText);
+            const name = encodeURIComponent(document.getElementById('eval-name').value);
+            const leader = encodeURIComponent(document.getElementById('eval-leader').value);
+            const score = encodeURIComponent(document.getElementById('eval-score').value);
+            const notes = encodeURIComponent(document.getElementById('eval-notes').value);
+
+            const formID = "1FAIpQLScWAJH9-RbsvEG2uSLDUY9FgGTsYnTuORHAwoXdFpAORJdV2g"; 
+            const entryIDs = {
+                cat: "entry.316348722",
+                inc: "entry.680075648",
+                comp: "entry.1538358417",
+                name: "entry.867199779",
+                score: "entry.762295271",
+                notes: "entry.1156153402",
+                leader: "entry.1770462856"
+            };
+
+            const baseURL = `https://docs.google.com/forms/d/e/${formID}/viewform?usp=pp_url`;
+            const finalURL = `${baseURL}&${entryIDs.cat}=${locationForCategoryColumn}&${entryIDs.inc}=${inc}&${entryIDs.comp}=${comp}&${entryIDs.name}=${name}&${entryIDs.leader}=${leader}&${entryIDs.score}=${score}&${entryIDs.notes}=${notes}`;
+            window.open(finalURL, '_blank');
+        }
     </script>
 </body>
 </html>
