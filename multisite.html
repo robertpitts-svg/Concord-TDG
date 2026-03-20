@@ -403,7 +403,8 @@
         replacementDiv.parentNode.replaceChild(notesArea, replacementDiv);
     }
 
-    function sendToGoogleSheets() {
+   function sendToGoogleSheets() {
+        const siteVal = encodeURIComponent(document.getElementById('site-selector').value);
         const loc = encodeURIComponent(currentIncLocation);
         const inc = encodeURIComponent(document.getElementById('out-incident').innerText);
         const comp = encodeURIComponent(document.getElementById('out-complication').innerText);
@@ -411,7 +412,9 @@
         const lead = encodeURIComponent(document.getElementById('eval-leader').value);
         const score = encodeURIComponent(document.getElementById('eval-score').value);
         const notes = encodeURIComponent(document.getElementById('eval-notes').value);
-        const url = `https://docs.google.com/forms/d/e/1FAIpQLScWAJH9-RbsvEG2uSLDUY9FgGTsYnTuORHAwoXdFpAORJdV2g/viewform?usp=pp_url&entry.316348722=${loc}&entry.680075648=${inc}&entry.1538358417=${comp}&entry.867199779=${name}&entry.1770462856=${lead}&entry.762295271=${score}&entry.1156153402=${notes}`;
+        
+        // The URL now includes &entry.1974077416=${siteVal} to log the specific site!
+        const url = `https://docs.google.com/forms/d/e/1FAIpQLScWAJH9-RbsvEG2uSLDUY9FgGTsYnTuORHAwoXdFpAORJdV2g/viewform?usp=pp_url&entry.1974077416=${siteVal}&entry.316348722=${loc}&entry.680075648=${inc}&entry.1538358417=${comp}&entry.867199779=${name}&entry.1770462856=${lead}&entry.762295271=${score}&entry.1156153402=${notes}`;
         window.open(url, '_blank');
     }
 
